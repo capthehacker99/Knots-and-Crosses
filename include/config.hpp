@@ -13,10 +13,10 @@ using i64 = std::int64_t;
 using f32 = float;
 using f64 = double;
 struct Vec2u16 {
-    u16 x;
-    u16 y;
+	u16 x;
+	u16 y;
 };
 namespace Consts {
-    inline constexpr Vec2u16 WindowSize = {1049u, 811u};
+	inline constexpr Vec2u16 WindowSize = {1049u, 811u};
 };
 #endif

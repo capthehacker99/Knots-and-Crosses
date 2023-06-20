@@ -141,7 +141,7 @@ namespace Window {
 			return WININITSTATUS::GLFW_WIN_FAIL;
 		}
 		glfwMakeContextCurrent(win);
-    	glfwSetFramebufferSizeCallback(win, onFrameBufferSizeChanged);
+		glfwSetFramebufferSizeCallback(win, onFrameBufferSizeChanged);
 		if (gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)) == 0)
 			return WININITSTATUS::GLAD_LOAD_FAIL;
 		if(mainShaderProgram.init() != Shaders::ShaderStatus::OK)
@@ -156,14 +156,14 @@ namespace Window {
 		glUniform1i(mainShaderProgram.boardUniformId, 0);
 		GLuint boardTexture;
 		glGenTextures(1, &boardTexture);
-    	glBindTexture(GL_TEXTURE_2D, boardTexture);
+		glBindTexture(GL_TEXTURE_2D, boardTexture);
 		board.init();
 		if(true) //This breaks?????
 			for(int x = 0; x < 3; ++x)
 				for(int y = 0; y < 3; ++y)
 					board.markPos(x, y, (rand() & 1) ? MarkType::X : MarkType::O);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8I, 3, 3, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, board.data());
 		board.print(); //This works fine now?? why.
 		GLuint emptyVAO;
