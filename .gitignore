@@ -1,0 +1,11 @@
+compile_flags.txt
+out
+glfw
+.ninja_deps
+.ninja_log
+build.ninja
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles
+run.bat
+libKnots_and_Crosses.dll.a
