@@ -41,12 +41,12 @@ target_include_directories(Knots_and_Crosses PRIVATE "${CMAKE_SOURCE_DIR}/boxer/
 # Platform-specific dependencies for Boxer
 if (APPLE)
    find_library(COCOA_LIBRARY Cocoa)
-   target_link_libraries(${PROJECT_NAME} PUBLIC ${COCOA_LIBRARY})
+   target_link_libraries(Knots_and_Crosses PRIVATE ${COCOA_LIBRARY})
 elseif (LINUX)
    find_package(PkgConfig REQUIRED)
    pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
-   target_link_libraries(${PROJECT_NAME} PUBLIC ${GTK3_LIBRARIES})
-   target_include_directories(${PROJECT_NAME} PRIVATE ${GTK3_INCLUDE_DIRS})
+   target_link_libraries(Knots_and_Crosses PRIVATE ${GTK3_LIBRARIES})
+   target_include_directories(Knots_and_Crosses PRIVATE ${GTK3_INCLUDE_DIRS})
 endif ()
 
 # Include dirs
@@ -64,11 +64,16 @@ target_link_options(Knots_and_Crosses PRIVATE
 )
 
 # Link libraries
-target_link_libraries(Knots_and_Crosses
+target_link_libraries(Knots_and_Crosses PRIVATE
 	"${CMAKE_SOURCE_DIR}/glfw/out/lib/libglfw3.a"
-	"gdi32"
-	"opengl32"
 )
+
+if(WIN32)
+	target_link_libraries(Knots_and_Crosses PRIVATE
+		"gdi32"
+		"opengl32"
+	)
+endif()
 
 # Copies rsrc folder
 add_custom_target(copy_rsrc_folder ALL

@@ -2,7 +2,7 @@
 out vec4 FragColor;
 in vec2 texcoords;
 uniform vec2 size;
-uniform usampler2D board;
+uniform usampler1D board;
 
 bool sampleCircle(vec2 cur, vec2 pos) {
 	float l = pos.x * 0.48f;
@@ -60,10 +60,13 @@ void main() {
 		}
 	}
 	vec2 cur = vec2(x, texcoords.y);
+	//FragColor = vec4(0.f, texture(board, 0.5f * texcoords.xy + vec2(0.5f), 0).r/2.f, 0.f, 1.f);
+	//vec2 coord = 0.5f * texcoords.xy + vec2(0.5f);
+	//FragColor = vec4(0.f, coord.x, coord.y, 1.f);
 
 	for(int x = 0;x < 3;++x) {
 		for(int y = 0;y < 3;++y) {
-			switch(texelFetch(board, ivec2(x, y), 0).r) {
+			switch(texelFetch(board, y * 3 + x, 0).r) {
 				case 1u:
 					drawX(cur, vec2(x-1, y-1), offsets);
 					break;

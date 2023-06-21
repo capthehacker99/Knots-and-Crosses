@@ -93,11 +93,11 @@ namespace Shaders {
 	}
 	bool MainShaderProgram::checkForLinkingErrors() const {
 		GLint success;
-		glGetShaderiv(id, GL_LINK_STATUS, &success);
+		glGetProgramiv(id, GL_LINK_STATUS, &success);
 		if (success != GL_FALSE)
 			return false;
 		GLint len;
-		glGetShaderiv(id, GL_INFO_LOG_LENGTH, &len);
+		glGetProgramiv(id, GL_INFO_LOG_LENGTH, &len);
 		if(len == 0)
 			return true;
 		#undef FAILMSG
@@ -106,7 +106,7 @@ namespace Shaders {
 		do
 			buffer = new(std::nothrow) char[len + sizeof(FAILMSG) - 1];
 		while(buffer == nullptr);
-		glGetShaderInfoLog(id, len, nullptr, buffer + sizeof(FAILMSG) - 1);
+		glGetProgramInfoLog(id, len, nullptr, buffer + sizeof(FAILMSG) - 1);
 		std::memcpy(buffer, FAILMSG, sizeof(FAILMSG) - 1);
 		boxer::show(buffer, "Error", boxer::Style::Error);
 		delete[] buffer;

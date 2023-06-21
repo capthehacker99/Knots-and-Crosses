@@ -1,4 +1,3 @@
-//Thanks derhass, https://stackoverflow.com/questions/2588875/whats-the-best-way-to-draw-a-fullscreen-quad-in-opengl-3-2
 #version 330 core
 out vec2 texcoords;
 void main() {

@@ -65,7 +65,7 @@ struct Board {
 		return buffer[y * 3 + x];
 	}
 	MarkStatus markPos(u8 x, u8 y, MarkType markType) {
-		const u8 idx = y * 3 + x;
+		const u8 idx = (y * 3) + x;
 		u8* cur = &buffer[idx];
 		const u8 type = *cur;
 		if(type != 0u)
@@ -101,12 +101,37 @@ struct Board {
 };
 
 Board board;
+MarkType curMarkType = MarkType::X;
 
 namespace Window {
+	Vec2u16 size;
 	Shaders::MainShaderProgram mainShaderProgram;
 	static void processInput(GLFWwindow *window) {
 		if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, GL_TRUE);
+		if(glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
+			board.clear();
+			glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 9, GL_RED_INTEGER, GL_UNSIGNED_BYTE, board.data());
+		}
+	}
+
+	static void onMouseButton(GLFWwindow* window, int button, int action, int mods)
+	{
+		UNUSED(mods);
+		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+		{
+			double mouseX;
+			double mouseY;
+			glfwGetCursorPos(window, &mouseX, &mouseY);
+			mouseX = (15*(2*mouseX-size.x+(0.7*static_cast<double>(size.y))))/(7*size.y);
+			mouseY = ((mouseY/(float)size.y)-0.15f)*3.f/0.7f;
+			if(mouseX > 0 && mouseX < 3 && mouseY > 0 && mouseY < 3) {
+				if(board.markPos(static_cast<u8>(mouseX), 2-static_cast<u8>(mouseY), curMarkType) != MarkStatus::BLOCKED) {
+					curMarkType = (curMarkType == MarkType::X) ? MarkType::O : MarkType::X;
+					glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 9, GL_RED_INTEGER, GL_UNSIGNED_BYTE, board.data());
+				}
+			}
+		}
 	}
 
 	// glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -115,6 +140,7 @@ namespace Window {
 		UNUSED(window);
 		glViewport(0, 0, width, height);
 		glUniform2f(mainShaderProgram.sizeUniformId, static_cast<float>(width), static_cast<float>(height));
+		size = {static_cast<u16>(width), static_cast<u16>(height)};
 	}
 
 	static bool mainLoop(GLFWwindow* window) {
@@ -128,13 +154,13 @@ namespace Window {
 	}
 
 	static WININITSTATUS init() {
-		srand(99);
+		//srand(time(NULL));
 		glfwInit();
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+		//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 		GLFWwindow* win = glfwCreateWindow(Consts::WindowSize.x, Consts::WindowSize.y, "Knots and Crosses", nullptr, nullptr);
 		if (win == nullptr) {
 			glfwTerminate();
@@ -142,6 +168,7 @@ namespace Window {
 		}
 		glfwMakeContextCurrent(win);
 		glfwSetFramebufferSizeCallback(win, onFrameBufferSizeChanged);
+		glfwSetMouseButtonCallback(win, onMouseButton);
 		if (gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)) == 0)
 			return WININITSTATUS::GLAD_LOAD_FAIL;
 		if(mainShaderProgram.init() != Shaders::ShaderStatus::OK)
@@ -152,20 +179,16 @@ namespace Window {
 			int height;
 			glfwGetFramebufferSize(win, &width, &height);
 			glUniform2f(mainShaderProgram.sizeUniformId, static_cast<float>(width), static_cast<float>(height));
+			size = {static_cast<u16>(width), static_cast<u16>(height)};
 		}
 		glUniform1i(mainShaderProgram.boardUniformId, 0);
 		GLuint boardTexture;
 		glGenTextures(1, &boardTexture);
-		glBindTexture(GL_TEXTURE_2D, boardTexture);
+		glBindTexture(GL_TEXTURE_1D, boardTexture);
 		board.init();
-		if(true) //This breaks?????
-			for(int x = 0; x < 3; ++x)
-				for(int y = 0; y < 3; ++y)
-					board.markPos(x, y, (rand() & 1) ? MarkType::X : MarkType::O);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8I, 3, 3, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, board.data());
-		board.print(); //This works fine now?? why.
+		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexImage1D(GL_TEXTURE_1D, 0, GL_R8I, 9, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, board.data());
 		GLuint emptyVAO;
 		glGenVertexArrays(1, &emptyVAO);
 		glBindVertexArray(emptyVAO);
