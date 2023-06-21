@@ -67,11 +67,11 @@ struct Board {
 	MarkStatus markPos(u8 x, u8 y, MarkType markType) {
 		const u8 idx = (y * 3) + x;
 		u8* cur = &buffer[idx];
-		const u8 type = *cur;
+		u8 type = *cur;
 		if(type != 0u)
 			return MarkStatus::BLOCKED;
-		*cur = static_cast<u8>(markType);
-		/*
+		type = static_cast<u8>(markType);
+		*cur = type;
 		switch(idx) {
 			case ctIdx(0, 0):
 				if(cur[1] == type && cur[2] == type)
@@ -84,7 +84,7 @@ struct Board {
 			case ctIdx(1, 0):
 				if(cur[-1] == type && cur[1] == type)
 					return MarkStatus::WIN;
-				if(cur[-3] == type && cur[3] == type)
+				if(cur[3] == type && cur[6] == type)
 					return MarkStatus::WIN;
 				break;
 			case ctIdx(2, 0):
@@ -92,10 +92,55 @@ struct Board {
 					return MarkStatus::WIN;
 				if(cur[3] == type && cur[6] == type)
 					return MarkStatus::WIN;
-				if(cur[4] == type && cur[8] == type)
+				if(cur[2] == type && cur[4] == type)
 					return MarkStatus::WIN;
+				break;
+			case ctIdx(0, 1):
+				if(cur[1] == type && cur[2] == type)
+					return MarkStatus::WIN;
+				if(cur[-3] == type && cur[3] == type)
+					return MarkStatus::WIN;
+				break;
+			case ctIdx(1, 1):
+				if(cur[-1] == type && cur[1] == type)
+					return MarkStatus::WIN;
+				if(cur[-3] == type && cur[3] == type)
+					return MarkStatus::WIN;
+				if(cur[-4] == type && cur[4] == type)
+					return MarkStatus::WIN;
+				if(cur[-2] == type && cur[2] == type)
+					return MarkStatus::WIN;
+				break;
+			case ctIdx(2, 1):
+				if(cur[-2] == type && cur[-1] == type)
+					return MarkStatus::WIN;
+				if(cur[-3] == type && cur[3] == type)
+					return MarkStatus::WIN;
+				break;
+			case ctIdx(0, 2):
+				if(cur[1] == type && cur[2] == type)
+					return MarkStatus::WIN;
+				if(cur[-3] == type && cur[-6] == type)
+					return MarkStatus::WIN;
+				if(cur[-2] == type && cur[-4] == type)
+					return MarkStatus::WIN;
+				break;
+			case ctIdx(1, 2):
+				if(cur[-1] == type && cur[1] == type)
+					return MarkStatus::WIN;
+				if(cur[-3] == type && cur[-6] == type)
+					return MarkStatus::WIN;
+				break;
+			case ctIdx(2, 2):
+				if(cur[-1] == type && cur[-2] == type)
+					return MarkStatus::WIN;
+				if(cur[-3] == type && cur[-6] == type)
+					return MarkStatus::WIN;
+				if(cur[-4] == type && cur[-8] == type)
+					return MarkStatus::WIN;
+			default:
+				break;
 		}
-		*/
 		return MarkStatus::OK;
 	}
 };
@@ -114,6 +159,7 @@ namespace Window {
 			glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 9, GL_RED_INTEGER, GL_UNSIGNED_BYTE, board.data());
 		}
 	}
+	static void render(GLFWwindow* window);
 
 	static void onMouseButton(GLFWwindow* window, int button, int action, int mods)
 	{
@@ -126,9 +172,21 @@ namespace Window {
 			mouseX = (15*(2*mouseX-size.x+(0.7*static_cast<double>(size.y))))/(7*size.y);
 			mouseY = ((mouseY/(float)size.y)-0.15f)*3.f/0.7f;
 			if(mouseX > 0 && mouseX < 3 && mouseY > 0 && mouseY < 3) {
-				if(board.markPos(static_cast<u8>(mouseX), 2-static_cast<u8>(mouseY), curMarkType) != MarkStatus::BLOCKED) {
-					curMarkType = (curMarkType == MarkType::X) ? MarkType::O : MarkType::X;
-					glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 9, GL_RED_INTEGER, GL_UNSIGNED_BYTE, board.data());
+				switch(board.markPos(static_cast<u8>(mouseX), 2-static_cast<u8>(mouseY), curMarkType)) {
+					case MarkStatus::WIN:
+						glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 9, GL_RED_INTEGER, GL_UNSIGNED_BYTE, board.data());
+						render(window);
+						boxer::show(curMarkType == MarkType::X ? "X wins!" : "O wins!", "Congratulations", boxer::Style::Info);
+						curMarkType = (rand() & 1) ? MarkType::O : MarkType::X;
+						board.clear();
+						glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 9, GL_RED_INTEGER, GL_UNSIGNED_BYTE, board.data());
+						break;
+					case MarkStatus::OK:
+						curMarkType = (curMarkType == MarkType::X) ? MarkType::O : MarkType::X;
+						glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 9, GL_RED_INTEGER, GL_UNSIGNED_BYTE, board.data());
+						break;
+					case MarkStatus::BLOCKED:
+						break;
 				}
 			}
 		}
@@ -143,13 +201,16 @@ namespace Window {
 		size = {static_cast<u16>(width), static_cast<u16>(height)};
 	}
 
-	static bool mainLoop(GLFWwindow* window) {
-		processInput(window);
+	static void render(GLFWwindow* window) {
 		glClearColor(1.f, 1.f, 1.f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glfwSwapBuffers(window);
-		glfwPollEvents();
+	}
+	static bool mainLoop(GLFWwindow* window) {
+		processInput(window);
+		render(window);
+		glfwWaitEvents();
 		return glfwWindowShouldClose(window) == 0;
 	}
 
